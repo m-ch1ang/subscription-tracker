@@ -1,0 +1,186 @@
+# Subscription Tracker
+
+A simple web application to track and manage your recurring subscriptions.
+
+## Features
+
+- ✅ Add, edit, and delete subscriptions
+- ✅ Track subscription name, frequency, amount, and start date
+- ✅ Dashboard with total yearly cost and average monthly cost
+- ✅ Sort subscriptions by amount or frequency
+- ✅ Modern, responsive UI
+- ✅ Data persistence with SQLite
+- ✅ RESTful API
+- ✅ Real-time cost calculations
+
+## Tech Stack
+
+- **Frontend**: React.js with modern hooks
+- **Backend**: Node.js + Express.js
+- **Database**: SQLite
+- **Styling**: CSS3 with Flexbox/Grid
+
+## Quick Start
+
+### Option 1: Automated Setup
+```bash
+./setup.sh
+npm run dev
+```
+
+### Option 2: Manual Setup
+1. **Install all dependencies**:
+   ```bash
+   npm run install-all
+   ```
+
+2. **Start the development servers**:
+   ```bash
+   npm run dev
+   ```
+
+3. **Open your browser**:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:3001
+
+## Project Structure
+
+```
+subscription-tracker/
+├── client/                 # React frontend
+│   ├── public/
+│   ├── src/
+│   │   ├── components/     # React components
+│   │   │   ├── Dashboard.js
+│   │   │   ├── SubscriptionList.js
+│   │   │   └── SubscriptionForm.js
+│   │   ├── services/       # API calls
+│   │   │   └── api.js
+│   │   ├── utils/          # Helper functions
+│   │   │   └── helpers.js
+│   │   └── App.js
+│   └── package.json
+├── server/                 # Node.js backend
+│   ├── controllers/        # Route handlers
+│   │   └── subscriptions.js
+│   ├── models/            # Database models
+│   │   └── database.js
+│   ├── routes/            # API routes
+│   │   └── subscriptions.js
+│   ├── index.js           # Server entry point
+│   └── package.json
+├── database.db            # SQLite database (auto-generated)
+├── setup.sh               # Setup script
+├── test-api.sh            # API test script
+└── README.md
+```
+
+## API Endpoints
+
+- `GET /api/subscriptions` - Get all subscriptions
+- `POST /api/subscriptions` - Create a new subscription
+- `PUT /api/subscriptions/:id` - Update a subscription
+- `DELETE /api/subscriptions/:id` - Delete a subscription
+- `GET /api/subscriptions/stats` - Get dashboard statistics
+- `GET /api/health` - Health check
+
+## Data Model
+
+```javascript
+{
+  id: number,           // Auto-generated
+  name: string,         // Subscription name
+  frequency: string,    // 'monthly', 'yearly', 'custom'
+  amount: number,       // Cost amount
+  startDate: string,    // ISO date string
+  createdAt: string,    // Auto-generated
+  updatedAt: string     // Auto-generated
+}
+```
+
+## Usage Examples
+
+### Adding a Subscription via API
+```bash
+curl -X POST http://localhost:3001/api/subscriptions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Netflix", 
+    "frequency": "monthly", 
+    "amount": 15.99, 
+    "startDate": "2024-01-01"
+  }'
+```
+
+### Getting Statistics
+```bash
+curl http://localhost:3001/api/subscriptions/stats
+```
+
+## Testing
+
+Run the API test suite:
+```bash
+./test-api.sh
+```
+
+## Development
+
+- Backend runs on port 3001
+- Frontend runs on port 3000
+- Database automatically initializes on first run
+- Hot reload enabled for both frontend and backend
+
+## Available Scripts
+
+```bash
+npm run dev          # Start both servers
+npm run server       # Start only backend
+npm run client       # Start only frontend
+npm run build        # Build for production
+npm run install-all  # Install all dependencies
+./setup.sh          # Run setup script
+./test-api.sh       # Test API endpoints
+```
+
+## Build for Production
+
+```bash
+npm run build
+npm start
+```
+
+## Features Implemented (Phase 1 MVP)
+
+✅ **CRUD Operations**
+- Create new subscriptions
+- Read/view all subscriptions
+- Update existing subscriptions
+- Delete subscriptions
+
+✅ **Data Persistence**
+- SQLite database with automatic initialization
+- Persistent storage across app restarts
+
+✅ **Dashboard Analytics**
+- Total yearly cost calculation
+- Average monthly cost
+- Active subscription count
+
+✅ **Sorting & Organization**
+- Sort by name, amount, or frequency
+- Clean, card-based layout
+
+✅ **Modern UI/UX**
+- Responsive design
+- Modal forms for adding/editing
+- Error handling and validation
+- Loading states
+
+✅ **Automatic Calculations**
+- Real-time cost calculations based on frequency
+- Annualized cost display for each subscription
+
+## License
+
+MIT License
