@@ -20,11 +20,43 @@ const calculateAnnualizedCost = (amount, frequency) => {
   }
 };
 
+// Helper function to calculate next payment date
+const calculateNextPaymentDate = (startDate, frequency) => {
+  const start = new Date(startDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
+  
+  let nextPayment = new Date(start);
+  
+  // If start date is in the future, that's the next payment
+  if (nextPayment >= today) {
+    return nextPayment.toISOString().split('T')[0];
+  }
+  
+  // Calculate next payment based on frequency
+  while (nextPayment < today) {
+    if (frequency === 'monthly' || frequency === 'custom') {
+      nextPayment.setMonth(nextPayment.getMonth() + 1);
+    } else if (frequency === 'yearly') {
+      nextPayment.setFullYear(nextPayment.getFullYear() + 1);
+    } else {
+      break; // Unknown frequency
+    }
+  }
+  
+  return nextPayment.toISOString().split('T')[0];
+};
+
 // Get all subscriptions
 const getSubscriptions = async (req, res) => {
   try {
     const subscriptions = await getAllSubscriptions();
-    res.json(subscriptions);
+    // Add nextPaymentDate to each subscription
+    const subscriptionsWithNextPayment = subscriptions.map(sub => ({
+      ...sub,
+      nextPaymentDate: calculateNextPaymentDate(sub.startDate, sub.frequency)
+    }));
+    res.json(subscriptionsWithNextPayment);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch subscriptions' });
   }
@@ -37,7 +69,12 @@ const getSubscription = async (req, res) => {
     if (!subscription) {
       return res.status(404).json({ error: 'Subscription not found' });
     }
-    res.json(subscription);
+    // Add nextPaymentDate to subscription
+    const subscriptionWithNextPayment = {
+      ...subscription,
+      nextPaymentDate: calculateNextPaymentDate(subscription.startDate, subscription.frequency)
+    };
+    res.json(subscriptionWithNextPayment);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch subscription' });
   }
@@ -62,7 +99,12 @@ const addSubscription = async (req, res) => {
     }
 
     const subscription = await createSubscription({ name, frequency, amount, startDate });
-    res.status(201).json(subscription);
+    // Add nextPaymentDate to response
+    const subscriptionWithNextPayment = {
+      ...subscription,
+      nextPaymentDate: calculateNextPaymentDate(startDate, frequency)
+    };
+    res.status(201).json(subscriptionWithNextPayment);
   } catch (error) {
     res.status(500).json({ error: 'Failed to create subscription' });
   }
@@ -88,7 +130,12 @@ const editSubscription = async (req, res) => {
     }
 
     const subscription = await updateSubscription(id, { name, frequency, amount, startDate });
-    res.json(subscription);
+    // Add nextPaymentDate to response
+    const subscriptionWithNextPayment = {
+      ...subscription,
+      nextPaymentDate: calculateNextPaymentDate(startDate, frequency)
+    };
+    res.json(subscriptionWithNextPayment);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update subscription' });
   }
