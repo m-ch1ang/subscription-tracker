@@ -2,6 +2,21 @@
 
 A simple web application to track and manage your recurring subscriptions.
 
+## About
+
+Subscription Tracker is a full-stack web application designed to help individuals and families monitor and manage their recurring subscription services. In an era where subscription-based services have become ubiquitous—from streaming platforms and software licenses to gym memberships and meal delivery services—it's easy to lose track of how much you're spending each month or year.
+
+This application provides a centralized solution to:
+
+- **Track all subscriptions** in one place with essential details like name, cost, billing frequency, and start date
+- **Calculate spending insights** including total yearly costs and average monthly expenses
+- **Organize subscriptions** with flexible sorting options to identify the most expensive services or review billing frequencies
+- **Make informed decisions** about which subscriptions to keep, cancel, or modify based on comprehensive cost analysis
+
+Built with modern web technologies, Subscription Tracker features a clean, responsive user interface that works seamlessly across desktop and mobile devices. The application uses a RESTful API architecture with a React frontend and Node.js/Express backend, ensuring a smooth user experience with real-time data updates and persistent storage.
+
+Whether you're trying to optimize your monthly budget, prepare for annual financial planning, or simply want visibility into your subscription spending, Subscription Tracker provides the tools you need to stay in control of your recurring expenses.
+
 ## Features
 
 - ✅ Add, edit, and delete subscriptions
