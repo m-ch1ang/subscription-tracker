@@ -1,9 +1,11 @@
 services:
-  - type: web
-    name: subscription-tracker
-    buildCommand: npm install && cd server && npm install && cd ../client && npm install && npm run build
-    startCommand: cd server && npm start
+  - type: static
+    name: subscription-tracker-frontend
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: client/build
     envVars:
       - key: NODE_ENV
         value: production
+      - key: REACT_APP_API_URL
+        value: https://subscription-tracker-r33q.onrender.com/api
 
