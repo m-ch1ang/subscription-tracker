@@ -63,7 +63,7 @@ npm run dev
 ```
 subscription-tracker/
 ├── client/                 # React frontend
-│   ├── public/
+│   ├── public/             # Static assets
 │   ├── src/
 │   │   ├── components/     # React components
 │   │   │   ├── Dashboard.js
@@ -74,7 +74,9 @@ subscription-tracker/
 │   │   ├── utils/          # Helper functions
 │   │   │   └── helpers.js
 │   │   └── App.js
-│   └── package.json
+│   ├── build.sh            # Client build script
+│   ├── package.json
+│   └── README.md
 ├── server/                 # Node.js backend
 │   ├── controllers/        # Route handlers
 │   │   └── subscriptions.js
@@ -82,11 +84,15 @@ subscription-tracker/
 │   │   └── database.js
 │   ├── routes/            # API routes
 │   │   └── subscriptions.js
+│   ├── database.db        # SQLite database (auto-generated)
 │   ├── index.js           # Server entry point
 │   └── package.json
-├── database.db            # SQLite database (auto-generated)
+├── build.sh                # Root build script
 ├── setup.sh               # Setup script
 ├── test-api.sh            # API test script
+├── render.yaml            # Render.com deployment config
+├── CNAME                  # Custom domain config
+├── package.json           # Root package.json
 └── README.md
 ```
 
