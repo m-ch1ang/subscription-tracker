@@ -1,7 +1,7 @@
 services:
   - type: web
     name: subscription-tracker
-    buildCommand: bash ./build.sh
+    buildCommand: npm run install-all && npm run build-client
     startCommand: cd server && npm start
     envVars:
       - key: NODE_ENV
