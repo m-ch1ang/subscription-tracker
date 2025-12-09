@@ -1,6 +1,6 @@
 -- Create subscriptions table
 CREATE TABLE IF NOT EXISTS subscriptions (
-  id BIGSERIAL PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   frequency TEXT NOT NULL CHECK (frequency IN ('monthly', 'yearly', 'custom')),
   amount DECIMAL(10, 2) NOT NULL,
