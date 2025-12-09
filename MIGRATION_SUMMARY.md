@@ -26,6 +26,7 @@ All code changes have been made to migrate from SQLite to Supabase. Here's what 
 ### 5. **Documentation**
 - ✅ Created `.env.example` file
 - ✅ Updated `SUPABASE_SETUP.md` with deployment instructions
+- ✅ Added ownership/auth migrations and notes
 
 ## 📋 What You Need to Do Next
 
@@ -35,10 +36,11 @@ cd server
 npm install
 ```
 
-### 2. Run Database Migration
+### 2. Run Database Migrations
 1. Go to your Supabase project dashboard
 2. Navigate to **SQL Editor**
-3. Copy and run the SQL from `supabase/migrations/001_create_subscriptions_table.sql`
+3. Run `supabase/migrations/001_create_subscriptions_table.sql`
+4. Run `supabase/migrations/002_add_users_and_subscription_ownership.sql`
 
 ### 3. Set Up Environment Variables
 
@@ -48,12 +50,26 @@ cd server
 cp .env.example .env
 # Then edit .env with your Supabase credentials
 ```
+- Required server env vars:
+  - `SUPABASE_URL`
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `SUPABASE_ANON_KEY`
+
+- Frontend env vars (create `client/.env`):
+  - `REACT_APP_SUPABASE_URL`
+  - `REACT_APP_SUPABASE_ANON_KEY`
+  - `REACT_APP_API_URL`
 
 **For Production (Render.com):**
 1. Go to Render dashboard → Your backend service
 2. Add environment variables:
    - `SUPABASE_URL` = Your Supabase project URL
+   - `SUPABASE_SERVICE_ROLE_KEY` = Your Supabase service role key
    - `SUPABASE_ANON_KEY` = Your Supabase anon key
+3. Frontend build variables:
+   - `REACT_APP_SUPABASE_URL`
+   - `REACT_APP_SUPABASE_ANON_KEY`
+   - `REACT_APP_API_URL`
 
 ### 4. Update render.yaml (After First Deployment)
 After deploying, update the `REACT_APP_API_URL` in `render.yaml` to match your actual backend service URL.
@@ -68,6 +84,7 @@ npm run dev
 - **Database**: Now uses Supabase (PostgreSQL) instead of SQLite
 - **Field Names**: Database uses snake_case (`start_date`, `created_at`) but API still returns camelCase (`startDate`, `createdAt`) - handled automatically
 - **No Local Database File**: The `database.db` file is no longer used
+- **Ownership**: `subscriptions` now require `user_id`; legacy unowned rows were removed during migration 002
 
 ## 🚀 Benefits
 
@@ -89,7 +106,7 @@ npm run dev
 
 ### "Missing Supabase environment variables"
 - Make sure you've created a `.env` file in the `server/` directory
-- Verify `SUPABASE_URL` and `SUPABASE_ANON_KEY` are set
+- Verify `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `SUPABASE_ANON_KEY` are set
 
 ### "Error connecting to Supabase"
 - Verify your Supabase project is active

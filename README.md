@@ -19,6 +19,7 @@ Whether you're trying to optimize your monthly budget, prepare for annual financ
 
 ## Features
 
+- ✅ Email/password auth via Supabase (per-user data)
 - ✅ Add, edit, and delete subscriptions
 - ✅ Track subscription name, frequency, amount, and start date
 - ✅ Dashboard with total yearly cost and average monthly cost
@@ -46,17 +47,22 @@ Whether you're trying to optimize your monthly budget, prepare for annual financ
 
 1. **Set up Supabase**:
    - Create a Supabase project at [supabase.com](https://supabase.com)
-   - Run the migration in `supabase/migrations/001_create_subscriptions_table.sql` via the Supabase SQL Editor
-   - Get your project URL and anon key from the Supabase dashboard
+   - Run both migrations in `supabase/migrations/001_create_subscriptions_table.sql` and `supabase/migrations/002_add_users_and_subscription_ownership.sql` via the Supabase SQL Editor
+   - Get your project URL, anon key, and service role key from the Supabase dashboard
 
 2. **Configure environment variables**:
-   Create a `.env` file in the `server/` directory:
-   ```
-   SUPABASE_URL=https://your-project-ref.supabase.co
-   SUPABASE_ANON_KEY=your-anon-key-here
-   ```
-   
-   Get these values from your Supabase dashboard: **Settings** > **API**
+   - Backend (`server/.env`):
+     ```
+     SUPABASE_URL=https://your-project-ref.supabase.co
+     SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+     SUPABASE_ANON_KEY=your-anon-key-here
+     ```
+   - Frontend (`client/.env`):
+     ```
+     REACT_APP_SUPABASE_URL=https://your-project-ref.supabase.co
+     REACT_APP_SUPABASE_ANON_KEY=your-anon-key-here
+     REACT_APP_API_URL=http://localhost:3001/api
+     ```
 
 3. **Install dependencies**:
    ```bash
@@ -112,7 +118,7 @@ subscription-tracker/
 
 ## API Endpoints
 
-The backend provides a RESTful API:
+The backend provides a RESTful API (all subscription routes require a `Bearer <access_token>` from Supabase Auth):
 
 - `GET /api/subscriptions` - Get all subscriptions
 - `POST /api/subscriptions` - Create a new subscription
@@ -127,13 +133,14 @@ The backend connects to Supabase (PostgreSQL) for data persistence.
 
 ```javascript
 {
-  id: number,           // Auto-generated (BIGSERIAL)
-  name: string,         // Subscription name
-  frequency: string,    // 'monthly', 'yearly', 'custom'
-  amount: number,       // Cost amount (DECIMAL)
-  startDate: string,    // ISO date string (YYYY-MM-DD)
-  createdAt: string,    // Auto-generated timestamp
-  updatedAt: string     // Auto-generated timestamp (auto-updated)
+  id: string,        // UUID
+  userId: string,    // UUID owner (Supabase Auth user id)
+  name: string,
+  frequency: 'monthly' | 'yearly' | 'custom',
+  amount: number,
+  startDate: string, // ISO date string (YYYY-MM-DD)
+  createdAt: string,
+  updatedAt: string
 }
 ```
 
@@ -145,6 +152,7 @@ Note: The API returns camelCase field names. The database uses snake_case (`star
 ```bash
 curl -X POST http://localhost:3001/api/subscriptions \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_SUPABASE_ACCESS_TOKEN" \
   -d '{
     "name": "Netflix", 
     "frequency": "monthly", 

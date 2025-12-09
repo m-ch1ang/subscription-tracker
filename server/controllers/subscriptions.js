@@ -50,7 +50,7 @@ const calculateNextPaymentDate = (startDate, frequency) => {
 // Get all subscriptions
 const getSubscriptions = async (req, res) => {
   try {
-    const subscriptions = await getAllSubscriptions();
+    const subscriptions = await getAllSubscriptions(req.user.id);
     // Add nextPaymentDate to each subscription
     const subscriptionsWithNextPayment = subscriptions.map(sub => ({
       ...sub,
@@ -65,7 +65,7 @@ const getSubscriptions = async (req, res) => {
 // Get subscription by ID
 const getSubscription = async (req, res) => {
   try {
-    const subscription = await getSubscriptionById(req.params.id);
+    const subscription = await getSubscriptionById(req.params.id, req.user.id);
     if (!subscription) {
       return res.status(404).json({ error: 'Subscription not found' });
     }
@@ -98,7 +98,7 @@ const addSubscription = async (req, res) => {
       return res.status(400).json({ error: 'Amount must be greater than 0' });
     }
 
-    const subscription = await createSubscription({ name, frequency, amount, startDate });
+    const subscription = await createSubscription({ name, frequency, amount, startDate }, req.user.id);
     // Add nextPaymentDate to response
     const subscriptionWithNextPayment = {
       ...subscription,
@@ -129,7 +129,10 @@ const editSubscription = async (req, res) => {
       return res.status(400).json({ error: 'Amount must be greater than 0' });
     }
 
-    const subscription = await updateSubscription(id, { name, frequency, amount, startDate });
+    const subscription = await updateSubscription(id, { name, frequency, amount, startDate }, req.user.id);
+    if (!subscription) {
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
     // Add nextPaymentDate to response
     const subscriptionWithNextPayment = {
       ...subscription,
@@ -144,7 +147,7 @@ const editSubscription = async (req, res) => {
 // Delete subscription
 const removeSubscription = async (req, res) => {
   try {
-    const result = await deleteSubscription(req.params.id);
+    const result = await deleteSubscription(req.params.id, req.user.id);
     if (result.deletedCount === 0) {
       return res.status(404).json({ error: 'Subscription not found' });
     }
@@ -157,7 +160,7 @@ const removeSubscription = async (req, res) => {
 // Get dashboard statistics
 const getStats = async (req, res) => {
   try {
-    const subscriptions = await getAllSubscriptions();
+    const subscriptions = await getAllSubscriptions(req.user.id);
     
     let totalYearlyCost = 0;
     

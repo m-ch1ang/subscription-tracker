@@ -2,7 +2,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 // Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
 // Create client with fallback empty strings to prevent crashes
 const supabase = createClient(
@@ -19,6 +19,7 @@ const toCamelCase = (obj) => {
     frequency: obj.frequency,
     amount: parseFloat(obj.amount),
     startDate: obj.start_date,
+    userId: obj.user_id,
     createdAt: obj.created_at,
     updatedAt: obj.updated_at
   };
@@ -30,7 +31,8 @@ const toSnakeCase = (obj) => {
     name: obj.name,
     frequency: obj.frequency,
     amount: obj.amount,
-    start_date: obj.startDate
+    start_date: obj.startDate,
+    user_id: obj.userId
   };
 };
 
@@ -38,7 +40,7 @@ const initializeDatabase = async () => {
   // Check if environment variables are set
   if (!supabaseUrl || !supabaseKey) {
     console.error('❌ Missing Supabase environment variables');
-    console.error('Please set SUPABASE_URL and SUPABASE_ANON_KEY in your .env file');
+    console.error('Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_ANON_KEY) in your .env file');
     throw new Error('Missing Supabase environment variables');
   }
 
@@ -62,11 +64,12 @@ const initializeDatabase = async () => {
   }
 };
 
-const getAllSubscriptions = async () => {
+const getAllSubscriptions = async (userId) => {
   try {
     const { data, error } = await supabase
       .from('subscriptions')
       .select('*')
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
     
     if (error) throw error;
@@ -78,12 +81,13 @@ const getAllSubscriptions = async () => {
   }
 };
 
-const getSubscriptionById = async (id) => {
+const getSubscriptionById = async (id, userId) => {
   try {
     const { data, error } = await supabase
       .from('subscriptions')
       .select('*')
       .eq('id', id)
+      .eq('user_id', userId)
       .single();
     
     if (error) {
@@ -101,9 +105,9 @@ const getSubscriptionById = async (id) => {
   }
 };
 
-const createSubscription = async (subscription) => {
+const createSubscription = async (subscription, userId) => {
   try {
-    const subscriptionData = toSnakeCase(subscription);
+    const subscriptionData = toSnakeCase({ ...subscription, userId });
     
     const { data, error } = await supabase
       .from('subscriptions')
@@ -111,7 +115,12 @@ const createSubscription = async (subscription) => {
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null;
+      }
+      throw error;
+    }
     
     return toCamelCase(data);
   } catch (error) {
@@ -120,14 +129,15 @@ const createSubscription = async (subscription) => {
   }
 };
 
-const updateSubscription = async (id, subscription) => {
+const updateSubscription = async (id, subscription, userId) => {
   try {
-    const subscriptionData = toSnakeCase(subscription);
+    const subscriptionData = toSnakeCase({ ...subscription, userId });
     
     const { data, error } = await supabase
       .from('subscriptions')
       .update(subscriptionData)
       .eq('id', id)
+      .eq('user_id', userId)
       .select()
       .single();
     
@@ -140,12 +150,13 @@ const updateSubscription = async (id, subscription) => {
   }
 };
 
-const deleteSubscription = async (id) => {
+const deleteSubscription = async (id, userId) => {
   try {
     const { error, count } = await supabase
       .from('subscriptions')
       .delete({ count: 'exact' })
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', userId);
     
     if (error) throw error;
     

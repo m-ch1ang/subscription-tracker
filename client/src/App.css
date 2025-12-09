@@ -39,6 +39,17 @@ body {
   font-weight: 700;
 }
 
+.auth-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.auth-user {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
 /* Main content */
 .app-main {
   display: flex;

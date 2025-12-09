@@ -3,7 +3,9 @@ import './App.css';
 import Dashboard from './components/Dashboard';
 import SubscriptionList from './components/SubscriptionList';
 import SubscriptionForm from './components/SubscriptionForm';
+import Auth from './components/Auth';
 import { subscriptionService } from './services/api';
+import { supabaseClient } from './services/supabase';
 
 function App() {
   const [subscriptions, setSubscriptions] = useState([]);
@@ -11,19 +13,59 @@ function App() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
+  const [session, setSession] = useState(null);
   const [error, setError] = useState('');
 
-  // Fetch data on component mount
   useEffect(() => {
-    fetchData();
+    const initializeAuth = async () => {
+      const { data, error: sessionError } = await supabaseClient.auth.getSession();
+      if (sessionError) {
+        console.error('Error fetching session:', sessionError);
+      }
+
+      const currentSession = data?.session || null;
+      setSession(currentSession);
+      setAuthReady(true);
+
+      if (currentSession) {
+        await fetchData(currentSession.access_token);
+      } else {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    const { data: authListener } = supabaseClient.auth.onAuthStateChange(
+      async (_event, newSession) => {
+        setSession(newSession);
+        if (newSession) {
+          await fetchData(newSession.access_token);
+        } else {
+          setSubscriptions([]);
+          setStats({});
+          setIsFormOpen(false);
+        }
+      }
+    );
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (accessToken = session?.access_token) => {
+    if (!accessToken) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const [subscriptionsData, statsData] = await Promise.all([
-        subscriptionService.getAll(),
-        subscriptionService.getStats(),
+        subscriptionService.getAll(accessToken),
+        subscriptionService.getStats(accessToken),
       ]);
       setSubscriptions(subscriptionsData);
       setStats(statsData);
@@ -38,7 +80,7 @@ function App() {
 
   const handleAddSubscription = async (subscriptionData) => {
     try {
-      await subscriptionService.create(subscriptionData);
+      await subscriptionService.create(subscriptionData, session?.access_token);
       await fetchData(); // Refresh data
       setIsFormOpen(false);
     } catch (err) {
@@ -49,7 +91,11 @@ function App() {
 
   const handleEditSubscription = async (subscriptionData) => {
     try {
-      await subscriptionService.update(editingSubscription.id, subscriptionData);
+      await subscriptionService.update(
+        editingSubscription.id,
+        subscriptionData,
+        session?.access_token
+      );
       await fetchData(); // Refresh data
       setEditingSubscription(null);
       setIsFormOpen(false);
@@ -62,7 +108,7 @@ function App() {
   const handleDeleteSubscription = async (id) => {
     if (window.confirm('Are you sure you want to delete this subscription?')) {
       try {
-        await subscriptionService.delete(id);
+        await subscriptionService.delete(id, session?.access_token);
         await fetchData(); // Refresh data
       } catch (err) {
         setError('Failed to delete subscription. Please try again.');
@@ -86,10 +132,40 @@ function App() {
     setEditingSubscription(null);
   };
 
-  if (loading) {
+  const handleLogout = async () => {
+    await supabaseClient.auth.signOut();
+    setSession(null);
+    setSubscriptions([]);
+    setStats({});
+    setIsFormOpen(false);
+    setLoading(false);
+  };
+
+  if (!authReady || loading) {
     return (
       <div className="app">
         <div className="loading">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="app">
+        <header className="app-header">
+          <h1>💳 Subscription Tracker</h1>
+        </header>
+
+        {error && (
+          <div className="error-message">
+            {error}
+            <button onClick={() => setError('')}>✕</button>
+          </div>
+        )}
+
+        <main className="app-main auth-main">
+          <Auth />
+        </main>
       </div>
     );
   }
@@ -98,6 +174,12 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>💳 Subscription Tracker</h1>
+        <div className="auth-info">
+          <span className="auth-user">{session.user?.email}</span>
+          <button className="btn btn-secondary" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
         <button className="btn btn-primary" onClick={openAddForm}>
           + Add Subscription
         </button>

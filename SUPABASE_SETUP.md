@@ -20,17 +20,16 @@ This guide will help you set up Supabase for your Subscription Tracker applicati
 2. Create a new project or select an existing one
 3. Note your project URL and anon key (you'll need these later)
 
-## Step 3: Run Database Migration
+## Step 3: Run Database Migrations (subscriptions + users/ownership)
 
-You have two options to create the subscriptions table:
+Run both migrations to create the `subscriptions` table and the new `users` table + ownership foreign key:
 
 ### Option A: Using Supabase Dashboard (Recommended for beginners)
 
 1. Go to your Supabase project dashboard
 2. Navigate to **SQL Editor**
-3. Copy the contents of `supabase/migrations/001_create_subscriptions_table.sql`
-4. Paste it into the SQL Editor
-5. Click **Run** to execute the migration
+3. Copy the contents of `supabase/migrations/001_create_subscriptions_table.sql` and run it
+4. Copy the contents of `supabase/migrations/002_add_users_and_subscription_ownership.sql` and run it
 
 ### Option B: Using Supabase CLI
 
@@ -68,16 +67,26 @@ The application code has been updated to use Supabase. You need to set up enviro
    cp .env.example .env  # If you have an example file
    ```
 
-2. Add your Supabase credentials:
+2. Add your Supabase credentials (backend):
    ```
    SUPABASE_URL=https://your-project-ref.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
    SUPABASE_ANON_KEY=your-anon-key-here
    ```
+   - `SUPABASE_SERVICE_ROLE_KEY` is required so the server can verify JWTs and upsert user profiles. Keep it server-side only.
 
-3. Find these values in your Supabase dashboard:
+3. Add your Supabase credentials (frontend) in `client/.env`:
+   ```
+   REACT_APP_SUPABASE_URL=https://your-project-ref.supabase.co
+   REACT_APP_SUPABASE_ANON_KEY=your-anon-key-here
+   REACT_APP_API_URL=http://localhost:3001/api
+   ```
+
+4. Find these values in your Supabase dashboard:
    - Go to **Settings** > **API**
-   - Copy the **Project URL** (SUPABASE_URL)
-   - Copy the **anon public** key (SUPABASE_ANON_KEY)
+   - Copy the **Project URL** (SUPABASE_URL / REACT_APP_SUPABASE_URL)
+   - Copy the **anon public** key (SUPABASE_ANON_KEY / REACT_APP_SUPABASE_ANON_KEY)
+   - Copy the **service_role** key (SUPABASE_SERVICE_ROLE_KEY) — do not expose this to the client
 
 ### For Production (Render.com)
 
@@ -86,21 +95,30 @@ The application code has been updated to use Supabase. You need to set up enviro
 3. Navigate to **Environment** tab
 4. Add these environment variables:
    - `SUPABASE_URL` = Your Supabase project URL
+   - `SUPABASE_SERVICE_ROLE_KEY` = Your Supabase service role key
    - `SUPABASE_ANON_KEY` = Your Supabase anon key
+5. For the frontend, set build-time env vars:
+   - `REACT_APP_SUPABASE_URL` = Your Supabase project URL
+   - `REACT_APP_SUPABASE_ANON_KEY` = Your Supabase anon key
+   - `REACT_APP_API_URL` = URL of your deployed backend (e.g., `https://your-backend.onrender.com/api`)
 
 **Note:** The code migration is already complete! The application now uses Supabase instead of SQLite.
 
 ## Database Schema
 
-The `subscriptions` table includes:
+### `users`
+- `id` - UUID primary key referencing `auth.users(id)` (same as Supabase Auth user id)
+- `email` - User email (unique, not null)
+- `created_at` / `updated_at` - Timestamps with trigger-managed `updated_at`
 
-- `id` - Auto-incrementing primary key (BIGSERIAL)
+### `subscriptions`
+- `id` - UUID primary key
+- `user_id` - UUID foreign key to `users(id)`, cascade delete
 - `name` - Subscription name (TEXT, NOT NULL)
 - `frequency` - Billing frequency: 'monthly', 'yearly', or 'custom' (TEXT, NOT NULL)
 - `amount` - Subscription cost (DECIMAL(10, 2), NOT NULL)
 - `start_date` - When the subscription started (DATE, NOT NULL)
-- `created_at` - Timestamp when record was created (auto-generated)
-- `updated_at` - Timestamp when record was last updated (auto-updated)
+- `created_at` / `updated_at` - Timestamps with trigger-managed `updated_at`
 
 ## Notes
 

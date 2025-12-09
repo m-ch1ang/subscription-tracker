@@ -4,6 +4,7 @@ const path = require('path');
 require('dotenv').config();
 
 const subscriptionRoutes = require('./routes/subscriptions');
+const { requireAuth } = require('./middleware/auth');
 const { initializeDatabase } = require('./models/database');
 
 const app = express();
@@ -14,7 +15,7 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/subscriptions', requireAuth, subscriptionRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
