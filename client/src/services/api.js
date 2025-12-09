@@ -81,3 +81,24 @@ export const subscriptionService = {
     return response.json();
   },
 };
+
+export const userService = {
+  // Change the authenticated user's password
+  async changePassword(newPassword, accessToken) {
+    const response = await fetch(`${API_BASE_URL}/user/change-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...withAuth(accessToken),
+      },
+      body: JSON.stringify({ newPassword }),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      throw new Error(errorBody.error || 'Failed to update password');
+    }
+
+    return response.json();
+  },
+};

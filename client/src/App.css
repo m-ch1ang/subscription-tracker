@@ -33,6 +33,17 @@ body {
   border-bottom: 2px solid #e0e0e0;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 10px;
+}
+
 .app-header h1 {
   font-size: 2.5rem;
   color: #2c3e50;
@@ -157,8 +168,41 @@ body {
     gap: 20px;
     text-align: center;
   }
+ 
+  .header-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+ 
+  .header-buttons {
+    width: 100%;
+    justify-content: center;
+    display: flex;
+  }
   
   .app-header h1 {
     font-size: 2rem;
   }
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  max-width: 520px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
 }

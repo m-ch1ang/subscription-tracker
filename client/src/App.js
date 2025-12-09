@@ -4,6 +4,7 @@ import Dashboard from './components/Dashboard';
 import SubscriptionList from './components/SubscriptionList';
 import SubscriptionForm from './components/SubscriptionForm';
 import Auth from './components/Auth';
+import Settings from './components/Settings';
 import { subscriptionService } from './services/api';
 import { supabaseClient } from './services/supabase';
 
@@ -17,6 +18,7 @@ function App() {
   const [authReady, setAuthReady] = useState(false);
   const [session, setSession] = useState(null);
   const [error, setError] = useState('');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -150,6 +152,7 @@ function App() {
     setIsFormOpen(false);
     hasLoadedOnceRef.current = false;
     setLoading(false);
+    setIsSettingsOpen(false);
   };
 
   if (!authReady || loading) {
@@ -185,15 +188,25 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>💳 Subscription Tracker</h1>
-        <div className="auth-info">
-          <span className="auth-user">{session.user?.email}</span>
-          <button className="btn btn-secondary" onClick={handleLogout}>
-            Logout
-          </button>
+        <div className="header-actions">
+          <div className="header-buttons">
+            <button
+              className="btn btn-secondary"
+              onClick={() => setIsSettingsOpen(true)}
+            >
+              Settings
+            </button>
+            <button className="btn btn-primary" onClick={openAddForm}>
+              + Add Subscription
+            </button>
+          </div>
+          <div className="auth-info">
+            <span className="auth-user">{session.user?.email}</span>
+            <button className="btn btn-secondary" onClick={handleLogout}>
+              Logout
+            </button>
+          </div>
         </div>
-        <button className="btn btn-primary" onClick={openAddForm}>
-          + Add Subscription
-        </button>
       </header>
 
       {error && (
@@ -218,6 +231,20 @@ function App() {
           onSubmit={editingSubscription ? handleEditSubscription : handleAddSubscription}
           onCancel={closeForm}
         />
+      )}
+
+      {isSettingsOpen && (
+        <div
+          className="modal-backdrop"
+          onClick={() => setIsSettingsOpen(false)}
+        >
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <Settings
+              accessToken={session?.access_token}
+              onClose={() => setIsSettingsOpen(false)}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
