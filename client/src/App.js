@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import Dashboard from './components/Dashboard';
 import SubscriptionList from './components/SubscriptionList';
@@ -13,6 +13,7 @@ function App() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
+  const hasLoadedOnceRef = useRef(false);
   const [authReady, setAuthReady] = useState(false);
   const [session, setSession] = useState(null);
   const [error, setError] = useState('');
@@ -46,6 +47,7 @@ function App() {
           setSubscriptions([]);
           setStats({});
           setIsFormOpen(false);
+          hasLoadedOnceRef.current = false;
         }
       }
     );
@@ -58,11 +60,16 @@ function App() {
   const fetchData = async (accessToken = session?.access_token) => {
     if (!accessToken) {
       setLoading(false);
+      hasLoadedOnceRef.current = true;
       return;
     }
 
-    try {
+    const shouldShowLoading = !hasLoadedOnceRef.current;
+    if (shouldShowLoading) {
       setLoading(true);
+    }
+
+    try {
       const [subscriptionsData, statsData] = await Promise.all([
         subscriptionService.getAll(accessToken),
         subscriptionService.getStats(accessToken),
@@ -74,7 +81,10 @@ function App() {
       setError('Failed to fetch data. Please try again.');
       console.error('Error fetching data:', err);
     } finally {
-      setLoading(false);
+      hasLoadedOnceRef.current = true;
+      if (shouldShowLoading) {
+        setLoading(false);
+      }
     }
   };
 
@@ -138,6 +148,7 @@ function App() {
     setSubscriptions([]);
     setStats({});
     setIsFormOpen(false);
+    hasLoadedOnceRef.current = false;
     setLoading(false);
   };
 
