@@ -9,7 +9,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# SQLite DB
+# Database files (no longer used - using Supabase)
 database.db
 
 # Build outputs

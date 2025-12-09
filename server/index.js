@@ -13,9 +13,6 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Initialize database
-initializeDatabase();
-
 // Routes
 app.use('/api/subscriptions', subscriptionRoutes);
 
@@ -36,4 +33,11 @@ if (process.env.NODE_ENV === 'production') {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 API available at http://localhost:${PORT}/api`);
+  console.log(`🔗 CORS enabled for all origins`);
+  
+  // Initialize database after server starts (non-blocking)
+  initializeDatabase().catch(err => {
+    console.error('⚠️  Database connection issue:', err.message);
+    console.error('⚠️  Server is running, but database operations will fail until configured');
+  });
 });

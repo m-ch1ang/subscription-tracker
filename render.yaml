@@ -1,4 +1,21 @@
 services:
+  # Backend API Service
+  - type: web
+    name: subscription-tracker-backend
+    env: node
+    buildCommand: npm run install-all && cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+
+  # Frontend Static Site
   - type: static
     name: subscription-tracker-frontend
     buildCommand: cd client && npm install && npm run build
@@ -7,5 +24,5 @@ services:
       - key: NODE_ENV
         value: production
       - key: REACT_APP_API_URL
-        value: https://subscription-tracker-r33q.onrender.com/api
+        value: https://subscription-tracker-backend.onrender.com/api
 

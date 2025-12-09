@@ -1,82 +1,159 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
 
-const dbPath = path.join(__dirname, '../database.db');
-const db = new sqlite3.Database(dbPath);
+// Initialize Supabase client
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-const initializeDatabase = () => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS subscriptions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      frequency TEXT NOT NULL CHECK (frequency IN ('monthly', 'yearly', 'custom')),
-      amount REAL NOT NULL,
-      startDate TEXT NOT NULL,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `, (err) => {
-    if (err) {
-      console.error('Error creating subscriptions table:', err);
-    } else {
-      console.log('✅ Database initialized successfully');
+// Create client with fallback empty strings to prevent crashes
+const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseKey || 'placeholder-key'
+);
+
+// Helper function to transform snake_case to camelCase
+const toCamelCase = (obj) => {
+  if (!obj) return null;
+  return {
+    id: obj.id,
+    name: obj.name,
+    frequency: obj.frequency,
+    amount: parseFloat(obj.amount),
+    startDate: obj.start_date,
+    createdAt: obj.created_at,
+    updatedAt: obj.updated_at
+  };
+};
+
+// Helper function to transform camelCase to snake_case
+const toSnakeCase = (obj) => {
+  return {
+    name: obj.name,
+    frequency: obj.frequency,
+    amount: obj.amount,
+    start_date: obj.startDate
+  };
+};
+
+const initializeDatabase = async () => {
+  // Check if environment variables are set
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('❌ Missing Supabase environment variables');
+    console.error('Please set SUPABASE_URL and SUPABASE_ANON_KEY in your .env file');
+    throw new Error('Missing Supabase environment variables');
+  }
+
+  try {
+    // Test connection by querying the subscriptions table
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('id')
+      .limit(1);
+    
+    if (error) {
+      console.error('❌ Error connecting to Supabase:', error.message);
+      console.error('Make sure you have run the migration SQL in your Supabase project');
+      throw error;
     }
-  });
+    
+    console.log('✅ Connected to Supabase successfully');
+  } catch (error) {
+    console.error('❌ Database initialization failed:', error.message);
+    throw error;
+  }
 };
 
-const getAllSubscriptions = () => {
-  return new Promise((resolve, reject) => {
-    db.all('SELECT * FROM subscriptions ORDER BY createdAt DESC', (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
+const getAllSubscriptions = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    return data.map(toCamelCase);
+  } catch (error) {
+    console.error('Error fetching subscriptions:', error);
+    throw error;
+  }
 };
 
-const getSubscriptionById = (id) => {
-  return new Promise((resolve, reject) => {
-    db.get('SELECT * FROM subscriptions WHERE id = ?', [id], (err, row) => {
-      if (err) reject(err);
-      else resolve(row);
-    });
-  });
-};
-
-const createSubscription = (subscription) => {
-  return new Promise((resolve, reject) => {
-    const { name, frequency, amount, startDate } = subscription;
-    db.run(
-      'INSERT INTO subscriptions (name, frequency, amount, startDate) VALUES (?, ?, ?, ?)',
-      [name, frequency, amount, startDate],
-      function(err) {
-        if (err) reject(err);
-        else resolve({ id: this.lastID, ...subscription });
+const getSubscriptionById = async (id) => {
+  try {
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No rows returned
+        return null;
       }
-    );
-  });
+      throw error;
+    }
+    
+    return toCamelCase(data);
+  } catch (error) {
+    console.error('Error fetching subscription:', error);
+    throw error;
+  }
 };
 
-const updateSubscription = (id, subscription) => {
-  return new Promise((resolve, reject) => {
-    const { name, frequency, amount, startDate } = subscription;
-    db.run(
-      'UPDATE subscriptions SET name = ?, frequency = ?, amount = ?, startDate = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?',
-      [name, frequency, amount, startDate, id],
-      function(err) {
-        if (err) reject(err);
-        else resolve({ id, ...subscription });
-      }
-    );
-  });
+const createSubscription = async (subscription) => {
+  try {
+    const subscriptionData = toSnakeCase(subscription);
+    
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .insert(subscriptionData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    return toCamelCase(data);
+  } catch (error) {
+    console.error('Error creating subscription:', error);
+    throw error;
+  }
 };
 
-const deleteSubscription = (id) => {
-  return new Promise((resolve, reject) => {
-    db.run('DELETE FROM subscriptions WHERE id = ?', [id], function(err) {
-      if (err) reject(err);
-      else resolve({ deletedCount: this.changes });
-    });
-  });
+const updateSubscription = async (id, subscription) => {
+  try {
+    const subscriptionData = toSnakeCase(subscription);
+    
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .update(subscriptionData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    return toCamelCase(data);
+  } catch (error) {
+    console.error('Error updating subscription:', error);
+    throw error;
+  }
+};
+
+const deleteSubscription = async (id) => {
+  try {
+    const { error, count } = await supabase
+      .from('subscriptions')
+      .delete({ count: 'exact' })
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    return { deletedCount: count || 0 };
+  } catch (error) {
+    console.error('Error deleting subscription:', error);
+    throw error;
+  }
 };
 
 module.exports = {

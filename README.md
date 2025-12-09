@@ -13,7 +13,7 @@ This application provides a centralized solution to:
 - **Organize subscriptions** with flexible sorting options to identify the most expensive services or review billing frequencies
 - **Make informed decisions** about which subscriptions to keep, cancel, or modify based on comprehensive cost analysis
 
-Built with modern web technologies, Subscription Tracker features a clean, responsive user interface that works seamlessly across desktop and mobile devices. The application uses a RESTful API architecture with a React frontend and Node.js/Express backend, ensuring a smooth user experience with real-time data updates and persistent storage.
+Built with modern web technologies, Subscription Tracker features a clean, responsive user interface that works seamlessly across desktop and mobile devices. The application uses a React frontend with a Node.js/Express backend connected to Supabase (PostgreSQL), providing a smooth user experience with real-time data updates and persistent cloud storage.
 
 Whether you're trying to optimize your monthly budget, prepare for annual financial planning, or simply want visibility into your subscription spending, Subscription Tracker provides the tools you need to stay in control of your recurring expenses.
 
@@ -24,39 +24,55 @@ Whether you're trying to optimize your monthly budget, prepare for annual financ
 - ✅ Dashboard with total yearly cost and average monthly cost
 - ✅ Sort subscriptions by amount or frequency
 - ✅ Modern, responsive UI
-- ✅ Data persistence with SQLite
-- ✅ RESTful API
+- ✅ Data persistence with Supabase (PostgreSQL)
+- ✅ RESTful API with Node.js/Express backend
 - ✅ Real-time cost calculations
 
 ## Tech Stack
 
 - **Frontend**: React.js with modern hooks
 - **Backend**: Node.js + Express.js
-- **Database**: SQLite
+- **Database**: PostgreSQL (via Supabase)
 - **Styling**: CSS3 with Flexbox/Grid
 
 ## Quick Start
 
-### Option 1: Automated Setup
-```bash
-./setup.sh
-npm run dev
-```
+### Prerequisites
+- Node.js and npm installed
+- Supabase account and project created
+- Supabase project URL and anon key
 
-### Option 2: Manual Setup
-1. **Install all dependencies**:
+### Setup Steps
+
+1. **Set up Supabase**:
+   - Create a Supabase project at [supabase.com](https://supabase.com)
+   - Run the migration in `supabase/migrations/001_create_subscriptions_table.sql` via the Supabase SQL Editor
+   - Get your project URL and anon key from the Supabase dashboard
+
+2. **Configure environment variables**:
+   Create a `.env` file in the `server/` directory:
+   ```
+   SUPABASE_URL=https://your-project-ref.supabase.co
+   SUPABASE_ANON_KEY=your-anon-key-here
+   ```
+   
+   Get these values from your Supabase dashboard: **Settings** > **API**
+
+3. **Install dependencies**:
    ```bash
    npm run install-all
    ```
 
-2. **Start the development servers**:
+4. **Start the development servers**:
    ```bash
    npm run dev
    ```
 
-3. **Open your browser**:
+5. **Open your browser**:
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:3001
+
+For detailed Supabase setup instructions, see `SUPABASE_SETUP.md`.
 
 ## Project Structure
 
@@ -79,14 +95,12 @@ subscription-tracker/
 │   └── README.md
 ├── server/                 # Node.js backend
 │   ├── controllers/        # Route handlers
-│   │   └── subscriptions.js
-│   ├── models/            # Database models
-│   │   └── database.js
+│   ├── models/            # Database models (Supabase)
 │   ├── routes/            # API routes
-│   │   └── subscriptions.js
-│   ├── database.db        # SQLite database (auto-generated)
-│   ├── index.js           # Server entry point
-│   └── package.json
+│   └── index.js           # Server entry point
+├── supabase/              # Supabase configuration
+│   └── migrations/        # Database migrations
+│       └── 001_create_subscriptions_table.sql
 ├── build.sh                # Root build script
 ├── setup.sh               # Setup script
 ├── test-api.sh            # API test script
@@ -98,6 +112,8 @@ subscription-tracker/
 
 ## API Endpoints
 
+The backend provides a RESTful API:
+
 - `GET /api/subscriptions` - Get all subscriptions
 - `POST /api/subscriptions` - Create a new subscription
 - `PUT /api/subscriptions/:id` - Update a subscription
@@ -105,19 +121,23 @@ subscription-tracker/
 - `GET /api/subscriptions/stats` - Get dashboard statistics
 - `GET /api/health` - Health check
 
+The backend connects to Supabase (PostgreSQL) for data persistence.
+
 ## Data Model
 
 ```javascript
 {
-  id: number,           // Auto-generated
+  id: number,           // Auto-generated (BIGSERIAL)
   name: string,         // Subscription name
   frequency: string,    // 'monthly', 'yearly', 'custom'
-  amount: number,       // Cost amount
-  startDate: string,    // ISO date string
-  createdAt: string,    // Auto-generated
-  updatedAt: string     // Auto-generated
+  amount: number,       // Cost amount (DECIMAL)
+  startDate: string,    // ISO date string (YYYY-MM-DD)
+  createdAt: string,    // Auto-generated timestamp
+  updatedAt: string     // Auto-generated timestamp (auto-updated)
 }
 ```
+
+Note: The API returns camelCase field names. The database uses snake_case (`start_date`, `created_at`, `updated_at`) which is automatically transformed by the backend.
 
 ## Usage Examples
 
@@ -133,11 +153,6 @@ curl -X POST http://localhost:3001/api/subscriptions \
   }'
 ```
 
-### Getting Statistics
-```bash
-curl http://localhost:3001/api/subscriptions/stats
-```
-
 ## Testing
 
 Run the API test suite:
@@ -147,22 +162,25 @@ Run the API test suite:
 
 ## Development
 
-- Backend runs on port 3001
 - Frontend runs on port 3000
-- Database automatically initializes on first run
+- Backend runs on port 3001
+- Database: Supabase (PostgreSQL) - cloud-hosted
+- Database migrations are in `supabase/migrations/`
+- See `SUPABASE_SETUP.md` for setup instructions
 - Hot reload enabled for both frontend and backend
 
 ## Available Scripts
 
 ```bash
-npm run dev          # Start both servers
+npm run dev          # Start both frontend and backend
 npm run server       # Start only backend
 npm run client       # Start only frontend
 npm run build        # Build for production
 npm run install-all  # Install all dependencies
 ./setup.sh          # Run setup script
-./test-api.sh       # Test API endpoints
 ```
+
+Note: Configure your Supabase credentials in `server/.env` file.
 
 ## Build for Production
 
@@ -180,8 +198,10 @@ npm start
 - Delete subscriptions
 
 ✅ **Data Persistence**
-- SQLite database with automatic initialization
-- Persistent storage across app restarts
+- Supabase (PostgreSQL) database with cloud hosting
+- Node.js/Express backend connecting to Supabase
+- Persistent storage with automatic backups
+- Database migrations for schema management
 
 ✅ **Dashboard Analytics**
 - Total yearly cost calculation
