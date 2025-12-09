@@ -49,6 +49,28 @@
   font-size: 14px;
 }
 
+.auth-link {
+  margin-top: 4px;
+  align-self: flex-end;
+  background: none;
+  border: none;
+  color: #3f51b5;
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.auth-link.center {
+  align-self: center;
+}
+
+.auth-helper {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.4;
+}
+
 .auth-error {
   background: #ffe6e6;
   color: #b00020;
