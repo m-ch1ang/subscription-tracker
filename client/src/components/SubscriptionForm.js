@@ -6,6 +6,8 @@ const SubscriptionForm = ({ subscription, categories = [], onSubmit, onCancel })
   const [formData, setFormData] = useState({
     name: '',
     frequency: 'monthly',
+    customInterval: '1',
+    customIntervalUnit: 'months',
     amount: '',
     startDate: getTodayDate(),
     categoryId: '',
@@ -18,6 +20,8 @@ const SubscriptionForm = ({ subscription, categories = [], onSubmit, onCancel })
       setFormData({
         name: subscription.name,
         frequency: subscription.frequency,
+        customInterval: String(subscription.customInterval || 1),
+        customIntervalUnit: subscription.customIntervalUnit || 'months',
         amount: subscription.amount.toString(),
         startDate: subscription.startDate,
         categoryId: subscription.categoryId || '',
@@ -49,17 +53,30 @@ const SubscriptionForm = ({ subscription, categories = [], onSubmit, onCancel })
       newErrors.categoryId = 'Category is required';
     }
 
+    if (formData.frequency === 'custom') {
+      const interval = parseInt(formData.customInterval, 10);
+      if (!Number.isInteger(interval) || interval < 1) {
+        newErrors.customInterval = 'Interval must be a positive whole number';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (validateForm()) {
+      const isCustom = formData.frequency === 'custom';
       onSubmit({
-        ...formData,
+        name: formData.name,
+        frequency: formData.frequency,
         amount: parseFloat(formData.amount),
+        startDate: formData.startDate,
+        categoryId: formData.categoryId,
+        customInterval: isCustom ? parseInt(formData.customInterval, 10) : null,
+        customIntervalUnit: isCustom ? formData.customIntervalUnit : null,
       });
     }
   };
@@ -70,8 +87,7 @@ const SubscriptionForm = ({ subscription, categories = [], onSubmit, onCancel })
       ...prev,
       [name]: value,
     }));
-    
-    // Clear error when user starts typing
+
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -153,6 +169,37 @@ const SubscriptionForm = ({ subscription, categories = [], onSubmit, onCancel })
               </select>
             </div>
           </div>
+
+          {formData.frequency === 'custom' && (
+            <div className="form-group custom-interval-group">
+              <label>Custom billing cycle *</label>
+              <div className="custom-interval-row">
+                <span className="custom-interval-prefix">Every</span>
+                <input
+                  type="number"
+                  id="customInterval"
+                  name="customInterval"
+                  value={formData.customInterval}
+                  onChange={handleChange}
+                  min="1"
+                  step="1"
+                  className={errors.customInterval ? 'error' : ''}
+                  aria-label="Custom interval count"
+                />
+                <select
+                  id="customIntervalUnit"
+                  name="customIntervalUnit"
+                  value={formData.customIntervalUnit}
+                  onChange={handleChange}
+                  aria-label="Custom interval unit"
+                >
+                  <option value="weeks">weeks</option>
+                  <option value="months">months</option>
+                </select>
+              </div>
+              {errors.customInterval && <span className="error-text">{errors.customInterval}</span>}
+            </div>
+          )}
 
           <div className="form-group">
             <label htmlFor="startDate">Start Date *</label>

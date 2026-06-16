@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { formatCurrency, formatDate, frequencyLabels, calculateAnnualizedCost } from '../utils/helpers';
+import {
+  formatCurrency,
+  formatDate,
+  formatFrequencyLabel,
+  calculateAnnualizedCostForSubscription,
+} from '../utils/helpers';
 import './SubscriptionList.css';
 
 const SubscriptionList = ({ subscriptions, onEdit, onDelete }) => {
@@ -21,8 +26,8 @@ const SubscriptionList = ({ subscriptions, onEdit, onDelete }) => {
 
     // Special handling for amount sorting (use annualized cost)
     if (sortBy === 'amount') {
-      aValue = calculateAnnualizedCost(a.amount, a.frequency);
-      bValue = calculateAnnualizedCost(b.amount, b.frequency);
+      aValue = calculateAnnualizedCostForSubscription(a);
+      bValue = calculateAnnualizedCostForSubscription(b);
     }
 
     // Convert to comparable values
@@ -125,7 +130,7 @@ const SubscriptionList = ({ subscriptions, onEdit, onDelete }) => {
               </div>
               <div className="detail-row">
                 <span className="detail-label">Frequency:</span>
-                <span className="detail-value">{frequencyLabels[subscription.frequency]}</span>
+                <span className="detail-value">{formatFrequencyLabel(subscription)}</span>
               </div>
               <div className="detail-row">
                 <span className="detail-label">Start Date:</span>
@@ -140,7 +145,7 @@ const SubscriptionList = ({ subscriptions, onEdit, onDelete }) => {
               <div className="detail-row">
                 <span className="detail-label">Yearly Cost:</span>
                 <span className="detail-value cost-highlight">
-                  {formatCurrency(calculateAnnualizedCost(subscription.amount, subscription.frequency))}
+                  {formatCurrency(calculateAnnualizedCostForSubscription(subscription))}
                 </span>
               </div>
             </div>

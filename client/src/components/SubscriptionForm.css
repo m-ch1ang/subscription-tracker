@@ -72,6 +72,18 @@
   gap: 20px;
 }
 
+.custom-interval-row {
+  display: grid;
+  grid-template-columns: auto 80px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.custom-interval-prefix {
+  color: #2c3e50;
+  font-weight: 500;
+}
+
 .form-group label {
   display: block;
   margin-bottom: 8px;

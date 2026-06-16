@@ -20,20 +20,6 @@ export const getTodayDate = () => {
   return new Date().toISOString().split('T')[0];
 };
 
-// Calculate annualized cost
-export const calculateAnnualizedCost = (amount, frequency) => {
-  switch (frequency) {
-    case 'monthly':
-      return amount * 12;
-    case 'yearly':
-      return amount;
-    case 'custom':
-      return amount * 12; // Assuming custom means monthly for now
-    default:
-      return 0;
-  }
-};
-
 // Frequency display mapping
 export const frequencyLabels = {
   monthly: 'Monthly',
@@ -41,29 +27,84 @@ export const frequencyLabels = {
   custom: 'Custom',
 };
 
+export const formatFrequencyLabel = ({ frequency, customInterval, customIntervalUnit }) => {
+  if (frequency === 'custom') {
+    const interval = customInterval || 1;
+    const unit = customIntervalUnit || 'months';
+    const unitLabel = interval === 1
+      ? (unit === 'weeks' ? 'week' : 'month')
+      : unit;
+    return `Every ${interval} ${unitLabel}`;
+  }
+
+  return frequencyLabels[frequency] || frequency;
+};
+
+// Calculate annualized cost
+export const calculateAnnualizedCost = (amount, frequency, customInterval, customIntervalUnit) => {
+  switch (frequency) {
+    case 'monthly':
+      return amount * 12;
+    case 'yearly':
+      return amount;
+    case 'custom': {
+      const interval = customInterval || 1;
+      const unit = customIntervalUnit || 'months';
+      if (unit === 'weeks') {
+        return amount * (52 / interval);
+      }
+      return amount * (12 / interval);
+    }
+    default:
+      return 0;
+  }
+};
+
+export const calculateAnnualizedCostForSubscription = (subscription) =>
+  calculateAnnualizedCost(
+    subscription.amount,
+    subscription.frequency,
+    subscription.customInterval,
+    subscription.customIntervalUnit
+  );
+
 // Calculate next payment date (for frontend use if needed)
-export const calculateNextPaymentDate = (startDate, frequency) => {
+export const calculateNextPaymentDate = (startDate, frequency, customInterval, customIntervalUnit) => {
   const start = new Date(startDate);
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
-  
+  today.setHours(0, 0, 0, 0);
+
   let nextPayment = new Date(start);
-  
-  // If start date is in the future, that's the next payment
+
   if (nextPayment >= today) {
     return nextPayment.toISOString().split('T')[0];
   }
-  
-  // Calculate next payment based on frequency
+
   while (nextPayment < today) {
-    if (frequency === 'monthly' || frequency === 'custom') {
+    if (frequency === 'monthly') {
       nextPayment.setMonth(nextPayment.getMonth() + 1);
     } else if (frequency === 'yearly') {
       nextPayment.setFullYear(nextPayment.getFullYear() + 1);
+    } else if (frequency === 'custom') {
+      const interval = customInterval || 1;
+      const unit = customIntervalUnit || 'months';
+      if (unit === 'weeks') {
+        nextPayment.setDate(nextPayment.getDate() + interval * 7);
+      } else {
+        nextPayment.setMonth(nextPayment.getMonth() + interval);
+      }
     } else {
-      break; // Unknown frequency
+      break;
     }
   }
-  
+
   return nextPayment.toISOString().split('T')[0];
 };
+
+export const calculateNextPaymentDateForSubscription = (subscription) =>
+  calculateNextPaymentDate(
+    subscription.startDate,
+    subscription.frequency,
+    subscription.customInterval,
+    subscription.customIntervalUnit
+  );

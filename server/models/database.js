@@ -18,6 +18,8 @@ const toCamelCase = (obj) => {
     id: obj.id,
     name: obj.name,
     frequency: obj.frequency,
+    customInterval: obj.custom_interval,
+    customIntervalUnit: obj.custom_interval_unit,
     amount: parseFloat(obj.amount),
     startDate: obj.start_date,
     categoryId: obj.category_id,
@@ -41,6 +43,14 @@ const toSnakeCase = (obj) => {
 
   if (obj.categoryId !== undefined) {
     data.category_id = obj.categoryId;
+  }
+
+  if (obj.frequency === 'custom') {
+    data.custom_interval = obj.customInterval;
+    data.custom_interval_unit = obj.customIntervalUnit;
+  } else {
+    data.custom_interval = null;
+    data.custom_interval_unit = null;
   }
 
   return data;
