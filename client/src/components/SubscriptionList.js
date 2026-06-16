@@ -74,6 +74,12 @@ const SubscriptionList = ({ subscriptions, onEdit, onDelete }) => {
             Amount {getSortIcon('amount')}
           </button>
           <button
+            className={`sort-btn ${sortBy === 'categoryName' ? 'active' : ''}`}
+            onClick={() => handleSort('categoryName')}
+          >
+            Category {getSortIcon('categoryName')}
+          </button>
+          <button
             className={`sort-btn ${sortBy === 'frequency' ? 'active' : ''}`}
             onClick={() => handleSort('frequency')}
           >
@@ -86,7 +92,12 @@ const SubscriptionList = ({ subscriptions, onEdit, onDelete }) => {
         {sortedSubscriptions.map((subscription) => (
           <div key={subscription.id} className="subscription-card">
             <div className="subscription-header">
-              <h3 className="subscription-name">{subscription.name}</h3>
+              <div className="subscription-title">
+                <h3 className="subscription-name">{subscription.name}</h3>
+                {subscription.categoryName && (
+                  <span className="category-badge">{subscription.categoryName}</span>
+                )}
+              </div>
               <div className="subscription-actions">
                 <button
                   className="btn btn-secondary btn-sm"
@@ -107,6 +118,10 @@ const SubscriptionList = ({ subscriptions, onEdit, onDelete }) => {
               <div className="detail-row">
                 <span className="detail-label">Amount:</span>
                 <span className="detail-value">{formatCurrency(subscription.amount)}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Category:</span>
+                <span className="detail-value">{subscription.categoryName || 'N/A'}</span>
               </div>
               <div className="detail-row">
                 <span className="detail-label">Frequency:</span>

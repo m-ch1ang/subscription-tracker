@@ -77,13 +77,28 @@
   margin-bottom: 15px;
 }
 
+.subscription-title {
+  flex: 1;
+  margin-right: 15px;
+}
+
 .subscription-name {
   color: #2c3e50;
   font-size: 1.2rem;
   font-weight: 600;
-  margin: 0;
-  flex: 1;
-  margin-right: 15px;
+  margin: 0 0 8px 0;
+}
+
+.category-badge {
+  display: inline-block;
+  background: #e8f4fd;
+  color: #2980b9;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .subscription-actions {
@@ -145,9 +160,13 @@
     align-items: stretch;
   }
   
-  .subscription-name {
+  .subscription-title {
     margin-right: 0;
     margin-bottom: 10px;
+  }
+
+  .subscription-name {
+    margin-bottom: 8px;
   }
   
   .subscription-actions {

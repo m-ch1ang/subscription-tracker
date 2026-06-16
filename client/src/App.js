@@ -10,6 +10,7 @@ import { supabaseClient } from './services/supabase';
 
 function App() {
   const [subscriptions, setSubscriptions] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [stats, setStats] = useState({});
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState(null);
@@ -48,6 +49,7 @@ function App() {
         } else {
           setSubscriptions([]);
           setStats({});
+          setCategories([]);
           setIsFormOpen(false);
           hasLoadedOnceRef.current = false;
         }
@@ -72,12 +74,14 @@ function App() {
     }
 
     try {
-      const [subscriptionsData, statsData] = await Promise.all([
+      const [subscriptionsData, statsData, categoriesData] = await Promise.all([
         subscriptionService.getAll(accessToken),
         subscriptionService.getStats(accessToken),
+        subscriptionService.getCategories(accessToken),
       ]);
       setSubscriptions(subscriptionsData);
       setStats(statsData);
+      setCategories(categoriesData);
       setError('');
     } catch (err) {
       setError('Failed to fetch data. Please try again.');
@@ -149,6 +153,7 @@ function App() {
     setSession(null);
     setSubscriptions([]);
     setStats({});
+    setCategories([]);
     setIsFormOpen(false);
     hasLoadedOnceRef.current = false;
     setLoading(false);
@@ -228,6 +233,7 @@ function App() {
       {isFormOpen && (
         <SubscriptionForm
           subscription={editingSubscription}
+          categories={categories}
           onSubmit={editingSubscription ? handleEditSubscription : handleAddSubscription}
           onCancel={closeForm}
         />

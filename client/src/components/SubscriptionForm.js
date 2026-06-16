@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { getTodayDate } from '../utils/helpers';
 import './SubscriptionForm.css';
 
-const SubscriptionForm = ({ subscription, onSubmit, onCancel }) => {
+const SubscriptionForm = ({ subscription, categories = [], onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
     name: '',
     frequency: 'monthly',
     amount: '',
     startDate: getTodayDate(),
+    categoryId: '',
   });
   const [errors, setErrors] = useState({});
 
@@ -19,9 +20,15 @@ const SubscriptionForm = ({ subscription, onSubmit, onCancel }) => {
         frequency: subscription.frequency,
         amount: subscription.amount.toString(),
         startDate: subscription.startDate,
+        categoryId: subscription.categoryId || '',
       });
+    } else if (categories.length > 0 && !formData.categoryId) {
+      setFormData((prev) => ({
+        ...prev,
+        categoryId: categories[0].id,
+      }));
     }
-  }, [subscription]);
+  }, [subscription, categories]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -36,6 +43,10 @@ const SubscriptionForm = ({ subscription, onSubmit, onCancel }) => {
 
     if (!formData.startDate) {
       newErrors.startDate = 'Start date is required';
+    }
+
+    if (!formData.categoryId) {
+      newErrors.categoryId = 'Category is required';
     }
 
     setErrors(newErrors);
@@ -90,6 +101,25 @@ const SubscriptionForm = ({ subscription, onSubmit, onCancel }) => {
               className={errors.name ? 'error' : ''}
             />
             {errors.name && <span className="error-text">{errors.name}</span>}
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="categoryId">Category *</label>
+            <select
+              id="categoryId"
+              name="categoryId"
+              value={formData.categoryId}
+              onChange={handleChange}
+              className={errors.categoryId ? 'error' : ''}
+            >
+              <option value="">Select a category</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+            {errors.categoryId && <span className="error-text">{errors.categoryId}</span>}
           </div>
 
           <div className="form-row">

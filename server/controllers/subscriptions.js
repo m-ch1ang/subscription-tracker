@@ -3,7 +3,9 @@ const {
   getSubscriptionById,
   createSubscription,
   updateSubscription,
-  deleteSubscription
+  deleteSubscription,
+  getAllCategories,
+  getCategoryById
 } = require('../models/database');
 
 // Helper function to calculate annualized cost
@@ -47,6 +49,16 @@ const calculateNextPaymentDate = (startDate, frequency) => {
   return nextPayment.toISOString().split('T')[0];
 };
 
+// Get all subscription categories
+const getCategories = async (req, res) => {
+  try {
+    const categories = await getAllCategories();
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch categories' });
+  }
+};
+
 // Get all subscriptions
 const getSubscriptions = async (req, res) => {
   try {
@@ -83,10 +95,10 @@ const getSubscription = async (req, res) => {
 // Create new subscription
 const addSubscription = async (req, res) => {
   try {
-    const { name, frequency, amount, startDate } = req.body;
+    const { name, frequency, amount, startDate, categoryId } = req.body;
     
     // Validation
-    if (!name || !frequency || !amount || !startDate) {
+    if (!name || !frequency || !amount || !startDate || !categoryId) {
       return res.status(400).json({ error: 'All fields are required' });
     }
     
@@ -98,7 +110,12 @@ const addSubscription = async (req, res) => {
       return res.status(400).json({ error: 'Amount must be greater than 0' });
     }
 
-    const subscription = await createSubscription({ name, frequency, amount, startDate }, req.user.id);
+    const category = await getCategoryById(categoryId);
+    if (!category) {
+      return res.status(400).json({ error: 'Invalid category value' });
+    }
+
+    const subscription = await createSubscription({ name, frequency, amount, startDate, categoryId }, req.user.id);
     // Add nextPaymentDate to response
     const subscriptionWithNextPayment = {
       ...subscription,
@@ -113,11 +130,11 @@ const addSubscription = async (req, res) => {
 // Update subscription
 const editSubscription = async (req, res) => {
   try {
-    const { name, frequency, amount, startDate } = req.body;
+    const { name, frequency, amount, startDate, categoryId } = req.body;
     const id = req.params.id;
     
     // Validation
-    if (!name || !frequency || !amount || !startDate) {
+    if (!name || !frequency || !amount || !startDate || !categoryId) {
       return res.status(400).json({ error: 'All fields are required' });
     }
     
@@ -129,7 +146,12 @@ const editSubscription = async (req, res) => {
       return res.status(400).json({ error: 'Amount must be greater than 0' });
     }
 
-    const subscription = await updateSubscription(id, { name, frequency, amount, startDate }, req.user.id);
+    const category = await getCategoryById(categoryId);
+    if (!category) {
+      return res.status(400).json({ error: 'Invalid category value' });
+    }
+
+    const subscription = await updateSubscription(id, { name, frequency, amount, startDate, categoryId }, req.user.id);
     if (!subscription) {
       return res.status(404).json({ error: 'Subscription not found' });
     }
@@ -181,6 +203,7 @@ const getStats = async (req, res) => {
 };
 
 module.exports = {
+  getCategories,
   getSubscriptions,
   getSubscription,
   addSubscription,

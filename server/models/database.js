@@ -13,12 +13,16 @@ const supabase = createClient(
 // Helper function to transform snake_case to camelCase
 const toCamelCase = (obj) => {
   if (!obj) return null;
+  const category = obj.subscription_categories || obj.category;
   return {
     id: obj.id,
     name: obj.name,
     frequency: obj.frequency,
     amount: parseFloat(obj.amount),
     startDate: obj.start_date,
+    categoryId: obj.category_id,
+    categoryName: category?.name || null,
+    categorySlug: category?.slug || null,
     userId: obj.user_id,
     createdAt: obj.created_at,
     updatedAt: obj.updated_at
@@ -27,14 +31,22 @@ const toCamelCase = (obj) => {
 
 // Helper function to transform camelCase to snake_case
 const toSnakeCase = (obj) => {
-  return {
+  const data = {
     name: obj.name,
     frequency: obj.frequency,
     amount: obj.amount,
     start_date: obj.startDate,
     user_id: obj.userId
   };
+
+  if (obj.categoryId !== undefined) {
+    data.category_id = obj.categoryId;
+  }
+
+  return data;
 };
+
+const subscriptionSelect = '*, subscription_categories(id, name, slug)';
 
 const initializeDatabase = async () => {
   // Check if environment variables are set
@@ -64,11 +76,54 @@ const initializeDatabase = async () => {
   }
 };
 
+const getAllCategories = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('subscription_categories')
+      .select('id, name, slug, sort_order')
+      .order('sort_order', { ascending: true });
+
+    if (error) throw error;
+
+    return data.map((category) => ({
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      sortOrder: category.sort_order
+    }));
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    throw error;
+  }
+};
+
+const getCategoryById = async (categoryId) => {
+  try {
+    const { data, error } = await supabase
+      .from('subscription_categories')
+      .select('id')
+      .eq('id', categoryId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null;
+      }
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching category:', error);
+    throw error;
+  }
+};
+
 const getAllSubscriptions = async (userId) => {
   try {
     const { data, error } = await supabase
       .from('subscriptions')
-      .select('*')
+      .select(subscriptionSelect)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
     
@@ -85,7 +140,7 @@ const getSubscriptionById = async (id, userId) => {
   try {
     const { data, error } = await supabase
       .from('subscriptions')
-      .select('*')
+      .select(subscriptionSelect)
       .eq('id', id)
       .eq('user_id', userId)
       .single();
@@ -112,7 +167,7 @@ const createSubscription = async (subscription, userId) => {
     const { data, error } = await supabase
       .from('subscriptions')
       .insert(subscriptionData)
-      .select()
+      .select(subscriptionSelect)
       .single();
     
     if (error) {
@@ -138,7 +193,7 @@ const updateSubscription = async (id, subscription, userId) => {
       .update(subscriptionData)
       .eq('id', id)
       .eq('user_id', userId)
-      .select()
+      .select(subscriptionSelect)
       .single();
     
     if (error) throw error;
@@ -169,6 +224,8 @@ const deleteSubscription = async (id, userId) => {
 
 module.exports = {
   initializeDatabase,
+  getAllCategories,
+  getCategoryById,
   getAllSubscriptions,
   getSubscriptionById,
   createSubscription,

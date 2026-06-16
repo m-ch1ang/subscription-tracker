@@ -80,6 +80,17 @@ export const subscriptionService = {
     if (!response.ok) throw new Error('Failed to fetch statistics');
     return response.json();
   },
+
+  // Get subscription categories
+  async getCategories(accessToken) {
+    const response = await fetch(`${API_BASE_URL}/subscriptions/categories`, {
+      headers: {
+        ...withAuth(accessToken),
+      },
+    });
+    if (!response.ok) throw new Error('Failed to fetch categories');
+    return response.json();
+  },
 };
 
 export const userService = {

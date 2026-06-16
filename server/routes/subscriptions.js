@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {
+  getCategories,
   getSubscriptions,
   getSubscription,
   addSubscription,
@@ -8,6 +9,9 @@ const {
   removeSubscription,
   getStats
 } = require('../controllers/subscriptions');
+
+// GET /api/subscriptions/categories - Get all subscription categories
+router.get('/categories', getCategories);
 
 // GET /api/subscriptions - Get all subscriptions
 router.get('/', getSubscriptions);
