@@ -108,3 +108,41 @@ export const calculateNextPaymentDateForSubscription = (subscription) =>
     subscription.customInterval,
     subscription.customIntervalUnit
   );
+
+const startOfDay = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+export const getDaysUntilPayment = (nextPaymentDate) => {
+  if (!nextPaymentDate) return null;
+  const today = startOfDay(new Date());
+  const paymentDate = startOfDay(nextPaymentDate);
+  return Math.ceil((paymentDate - today) / (1000 * 60 * 60 * 24));
+};
+
+export const isDueThisWeek = (nextPaymentDate) => {
+  const daysUntil = getDaysUntilPayment(nextPaymentDate);
+  return daysUntil !== null && daysUntil >= 0 && daysUntil <= 7;
+};
+
+export const filterSubscriptions = (subscriptions, { searchQuery, frequency, categoryId, dueThisWeek }) => {
+  const query = searchQuery.trim().toLowerCase();
+
+  return subscriptions.filter((sub) => {
+    if (query) {
+      const nameMatch = sub.name?.toLowerCase().includes(query);
+      const categoryMatch = sub.categoryName?.toLowerCase().includes(query);
+      if (!nameMatch && !categoryMatch) return false;
+    }
+
+    if (frequency !== 'all' && sub.frequency !== frequency) return false;
+
+    if (categoryId !== 'all' && sub.categoryId !== categoryId) return false;
+
+    if (dueThisWeek && !isDueThisWeek(sub.nextPaymentDate)) return false;
+
+    return true;
+  });
+};

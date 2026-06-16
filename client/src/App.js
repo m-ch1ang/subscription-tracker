@@ -225,6 +225,7 @@ function App() {
         <Dashboard stats={stats} subscriptions={subscriptions} />
         <SubscriptionList
           subscriptions={subscriptions}
+          categories={categories}
           onEdit={openEditForm}
           onDelete={handleDeleteSubscription}
         />
